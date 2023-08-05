@@ -43,11 +43,14 @@ class ChecklistItem {
     ];
   }
 
-  static List<ChecklistItem> constructChecklist(List<String> checklist) {
+  static List<ChecklistItem> constructChecklist(
+      List<String> checklist, List<String> checklistCompletion) {
     List<ChecklistItem> checklistItems = [];
     for (int i = 0; i < checklist.length; i++) {
       checklistItems.add(ChecklistItem(
-          id: i.toString(), checklistText: checklist[i], isCompleted: false));
+          id: i.toString(),
+          checklistText: checklist[i],
+          isCompleted: checklistCompletion[i] == "true"));
     }
     return checklistItems;
   }

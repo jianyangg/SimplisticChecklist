@@ -4,6 +4,9 @@ import 'package:simplistic_checklist/widgets/checklist_item_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/checklist_item.dart';
 
+// todo: add functionality to shift the order of the checklist items
+// todo: add functionality to edit the checklist items
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -28,6 +31,15 @@ class _HomePageState extends State<HomePage> {
       checklistItem.isCompleted = !checklistItem.isCompleted;
       _sortChecklist();
     });
+    // update shared preferences
+    List<String> checklistItemsStrings = [];
+    List<String> checklistItemsCompletion = [];
+    for (final item in currChecklist) {
+      checklistItemsStrings.add(item.checklistText.toString());
+      checklistItemsCompletion.add(item.isCompleted.toString());
+    }
+    prefs.setStringList(currListName, checklistItemsStrings);
+    prefs.setStringList('${currListName}_completion', checklistItemsCompletion);
   }
 
   void openDrawer() {
@@ -36,15 +48,33 @@ class _HomePageState extends State<HomePage> {
 
   void _deleteChecklistItem(ChecklistItem item) {
     setState(() {
-      // Remove the item from the checklistItems list
       currChecklist.remove(item);
+      // update shared preferences
+      List<String> checklistItemsStrings = [];
+      List<String> checklistItemsCompletion = [];
+      for (final item in currChecklist) {
+        checklistItemsStrings.add(item.checklistText.toString());
+        checklistItemsCompletion.add(item.isCompleted.toString());
+      }
+      prefs.setStringList(currListName, checklistItemsStrings);
+      prefs.setStringList(
+          '${currListName}_completion', checklistItemsCompletion);
     });
   }
 
   void _addChecklistItem(ChecklistItem item) {
     setState(() {
-      // Remove the item from the checklistItems list
       currChecklist.add(item);
+      // update shared preferences
+      List<String> checklistItemsStrings = [];
+      List<String> checklistItemsCompletion = [];
+
+      for (final item in currChecklist) {
+        checklistItemsStrings.add(item.checklistText.toString());
+      }
+      prefs.setStringList(currListName, checklistItemsStrings);
+      prefs.setStringList(
+          '${currListName}_completion', checklistItemsCompletion);
     });
   }
 
@@ -62,6 +92,15 @@ class _HomePageState extends State<HomePage> {
         return int.parse(a.id).compareTo(int.parse(b.id));
       }
     });
+    // update shared preferences
+    List<String> checklistItemsStrings = [];
+    List<String> checklistItemsCompletion = [];
+    for (final item in currChecklist) {
+      checklistItemsStrings.add(item.checklistText.toString());
+      checklistItemsCompletion.add(item.isCompleted.toString());
+    }
+    prefs.setStringList(currListName, checklistItemsStrings);
+    prefs.setStringList('${currListName}_completion', checklistItemsCompletion);
   }
 
   Future<void> loadChecklists() async {
@@ -76,30 +115,72 @@ class _HomePageState extends State<HomePage> {
     if (checklistsStrings != null) {
       print(checklistsStrings);
       setState(() {
-        // // if Main doesn't exist, add it
-        // if (!checklistsStrings.contains("main7dL5&gK9q@2mF")) {
-        //   print("testagain");
-        //   checklistsStrings.add("main7dL5&gK9q@2mF");
-        //   checklistMap["main7dL5&gK9q@2mF"] = ChecklistItem.defaultChecklist();
-        //   prefs.setStringList("main7dL5&gK9q@2mF", []);
-        //   prefs.setStringList(
-        //       'masterChecklist7dL5&gK9q@2mF', checklistsStrings);
-        // }
         checklists = checklistsStrings;
       });
+      print("checklists: $checklists");
+      if (checklists.isEmpty) {
+        setState(() {
+          currChecklist.addAll(ChecklistItem.defaultChecklist());
+        });
+      }
     }
     for (final checklist in checklists) {
       List<String>? checklistItemsStrings = prefs.getStringList(checklist);
-      if (checklistItemsStrings != null) {
+      List<String>? checklistItemsCompletion =
+          prefs.getStringList('${checklist}_completion');
+      print("checklistItemsCompletion: $checklistItemsCompletion");
+      print("checklistItemsStrings: $checklistItemsStrings");
+      if (checklistItemsStrings != null && checklistItemsCompletion != null) {
         List<ChecklistItem> checklistItems = [];
-        checklistItems =
-            ChecklistItem.constructChecklist(checklistItemsStrings);
+        checklistItems = ChecklistItem.constructChecklist(
+            checklistItemsStrings, checklistItemsCompletion);
         setState(() {
+          // print checklistmap for debugging
+          print("checklistMap: $checklistMap");
           checklistMap[checklist] = checklistItems;
         });
       }
     }
+
+    // get lastLoadedList from shared preferences
+    String? lastLoadedList = prefs.getString('lastLoadedList');
+    print("lastLoadedList: $lastLoadedList");
+    if (lastLoadedList != null) {
+      setState(() {
+        currListName = lastLoadedList!;
+        currChecklist = lastLoadedList == "main7dL5&gK9q@2mF"
+            ? ChecklistItem.defaultChecklist()
+            : checklistMap[currListName]!;
+        isDefaultChecklist = lastLoadedList == "main7dL5&gK9q@2mF";
+      });
+    } else {
+      lastLoadedList = "main7dL5&gK9q@2mF";
+      setState(() {
+        currListName = lastLoadedList!;
+        currChecklist = checklistMap[currListName]!;
+        isDefaultChecklist = true;
+      });
+      prefs.setString(lastLoadedList, currListName);
+    }
   }
+
+  // void _onReorder(int oldIndex, int newIndex) {
+  //   setState(() {
+  //     if (newIndex == oldIndex) {
+  //       return; // Item remains at the same position, no need to reorder
+  //     }
+
+  //     if (newIndex > oldIndex) {
+  //       newIndex -=
+  //           1; // Account for the shifting of the items after removing the old item
+  //     }
+
+  //     final ChecklistItem item = currChecklist.removeAt(oldIndex);
+  //     final GlobalKey key = _itemKeys.removeAt(oldIndex);
+  //     currChecklist.insert(newIndex, item);
+  //     _itemKeys.insert(newIndex, key);
+  //   });
+  // }
 
   @override
   void initState() {
@@ -241,9 +322,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       content: TextField(
                         controller: _addChecklistItemController,
+                        autofocus: true,
                         decoration: const InputDecoration(
-                          hintText: 'Lorem ipsum dolor sit amet',
-                        ),
+                            // hintText: 'New item',
+                            ),
                         style: const TextStyle(fontSize: 15),
                       ),
                       actions: [
@@ -370,6 +452,7 @@ class _HomePageState extends State<HomePage> {
                               currListName = checklists.isNotEmpty
                                   ? checklists[0]
                                   : "main7dL5&gK9q@2mF";
+                              prefs.setString("lastLoadedList", currListName);
                             });
                             Navigator.of(context).pop(); // Close the dialog
                           },
@@ -539,10 +622,15 @@ class _HomePageState extends State<HomePage> {
                                           checklistMap[newChecklistName] = [];
                                           prefs.setStringList(
                                               newChecklistName, []);
+                                          prefs.setStringList(
+                                              "${newChecklistName}_completion",
+                                              []);
                                           currChecklist =
                                               checklistMap[newChecklistName]!;
                                           currListName = newChecklistName;
                                           isDefaultChecklist = false;
+                                          prefs.setString(
+                                              "lastLoadedList", currListName);
                                         }
                                       });
                                       _addChecklistNameController.clear();
@@ -592,6 +680,7 @@ class _HomePageState extends State<HomePage> {
                     currChecklist = checklistMap[item]!;
                     isDefaultChecklist = false;
                     currListName = item;
+                    prefs.setString("lastLoadedList", currListName);
                   });
                   Navigator.pop(context);
                 },
@@ -603,23 +692,34 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),
+        // child: ReorderableListView(
+        // onReorder: _onReorder,
         child: ListView(
           children: [
             ClipRRect(
+              // key: GlobalKey(),
               child: Image.asset(
                 "assets/images/quote.png",
                 height: 40,
                 color: Colors.teal.shade200,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(
+              // key: GlobalKey(),
+              height: 20,
+            ),
             const Text(
               "No wise pilot, no matter how great his talent and experience, fails to use his checklist.",
               textAlign: TextAlign.center,
               style: TextStyle(color: tdBlack, fontSize: 17),
+              // key: GlobalKey(),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(
+              height: 5,
+              // key: GlobalKey(),
+            ),
             const Row(
+              // key: GlobalKey(),
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
@@ -632,13 +732,17 @@ class _HomePageState extends State<HomePage> {
                 )
               ],
             ),
-            const SizedBox(height: 10),
-            for (final item in currChecklist)
+            const SizedBox(
+              // key: GlobalKey(),
+              height: 10,
+            ),
+            for (int index = 0; index < currChecklist.length; index++)
               Column(
+                // key: Key(index.toString()),
                 children: [
                   const SizedBox(height: 10),
                   ChecklistItemTile(
-                    checklistItem: item,
+                    checklistItem: currChecklist[index],
                     onChecklistItemTap: _handleChecklistItemTap,
                     onChecklistItemDelete: _deleteChecklistItem,
                   ),
