@@ -1,0 +1,96 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "checklist.allItemsComplete" : {
+      "comment" : "Accessibility value shown when a checklist has no incomplete items.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All items complete"
+          }
+        }
+      }
+    },
+    "%lld item remaining" : {
+      "comment" : "The number of incomplete items in a checklist.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item remaining"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items remaining"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Add an item below to start this checklist." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add an item below to start this checklist."
+          }
+        }
+      }
+    },
+    "Completed items are hidden from this checklist." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed items are hidden from this checklist."
+          }
+        }
+      }
+    },
+    "New item" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New item"
+          }
+        }
+      }
+    },
+    "No Items Yet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Items Yet"
+          }
+        }
+      }
+    },
+    "Show Completed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Completed"
+          }
+        }
+      }
+    }
+  }
+}
