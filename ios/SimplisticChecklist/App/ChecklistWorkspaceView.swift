@@ -7,8 +7,10 @@ struct ChecklistWorkspaceView: View {
     @Binding var selection: UUID?
     let actions: ChecklistMutationActions
 
+    @State private var pendingSelectionRestore: SelectionRestore?
+
     private var sortedChecklists: [Checklist] {
-        checklists.sorted(by: Self.listSort)
+        checklists.sorted(by: ChecklistOrderer.checklistSort)
     }
 
     private var selectedChecklist: Checklist? {
@@ -21,7 +23,8 @@ struct ChecklistWorkspaceView: View {
             ListsSidebarView(
                 checklists: sortedChecklists,
                 selection: $selection,
-                actions: actions
+                actions: actions,
+                onChecklistDeleted: rememberDeletedChecklist
             )
         } detail: {
             if let selectedChecklist {
@@ -29,41 +32,67 @@ struct ChecklistWorkspaceView: View {
                     checklist: selectedChecklist,
                     allChecklists: sortedChecklists,
                     selection: $selection,
-                    actions: actions
+                    actions: actions,
+                    onChecklistDeleted: rememberDeletedChecklist
                 )
+                // Reset detail-local draft, filter, edit, and confirmation
+                // state when the selected checklist changes.
+                .id(selectedChecklist.id)
             } else {
                 NoChecklistSelectedView()
             }
         }
         .navigationSplitViewStyle(.balanced)
         .onAppear(perform: resolveSelection)
-        .onChange(of: checklists.map(\.id)) { _, _ in
-            resolveSelection()
+        .onChange(of: checklists.map(\.id)) { oldIDs, newIDs in
+            if let selected = selection,
+               oldIDs.contains(selected),
+               !newIDs.contains(selected) {
+                pendingSelectionRestore = SelectionRestore(
+                    deletedID: selected,
+                    fallbackID: ChecklistSelectionResolver.resolve(
+                        preferred: nil,
+                        in: sortedChecklists
+                    )
+                )
+            }
+
+            if let pendingSelectionRestore,
+               newIDs.contains(pendingSelectionRestore.deletedID) {
+                if selection == pendingSelectionRestore.fallbackID || selection == nil {
+                    selection = pendingSelectionRestore.deletedID
+                }
+                self.pendingSelectionRestore = nil
+            } else {
+                resolveSelection()
+            }
         }
+    }
+
+    private func rememberDeletedChecklist(_ id: UUID) {
+        let remaining = sortedChecklists.filter { $0.id != id }
+        let fallbackID = ChecklistSelectionResolver.resolve(
+            preferred: nil,
+            in: remaining
+        )
+        pendingSelectionRestore = SelectionRestore(
+            deletedID: id,
+            fallbackID: fallbackID
+        )
+        selection = fallbackID
     }
 
     private func resolveSelection() {
-        guard !sortedChecklists.isEmpty else {
-            selection = nil
-            return
-        }
-
-        if let selection, sortedChecklists.contains(where: { $0.id == selection }) {
-            return
-        }
-
-        selection = sortedChecklists[0].id
+        selection = ChecklistSelectionResolver.resolve(
+            preferred: selection,
+            in: sortedChecklists
+        )
     }
+}
 
-    private static func listSort(_ lhs: Checklist, _ rhs: Checklist) -> Bool {
-        if lhs.sortOrder != rhs.sortOrder {
-            return lhs.sortOrder < rhs.sortOrder
-        }
-        if lhs.createdAt != rhs.createdAt {
-            return lhs.createdAt < rhs.createdAt
-        }
-        return lhs.id.uuidString < rhs.id.uuidString
-    }
+private struct SelectionRestore {
+    let deletedID: UUID
+    let fallbackID: UUID?
 }
 
 private struct NoChecklistSelectedView: View {

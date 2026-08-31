@@ -6,6 +6,9 @@ struct ChecklistItemRow: View {
     let onToggle: () -> Void
     let onCommitEdit: (String) -> Result<Void, Error>
     let onDelete: () -> Void
+    let moveDestinations: [ChecklistMoveDestination]
+    let onMoveToChecklist: (UUID) -> Void
+    let allowsReordering: Bool
     let onMoveRequested: () -> Void
     let onFailure: (Error) -> Void
 
@@ -13,6 +16,7 @@ struct ChecklistItemRow: View {
     @State private var draftTitle: String
     @State private var isEditing = false
     @State private var localValidationMessage: String?
+    @State private var isShowingMoveDestinations = false
 
     init(
         item: ChecklistItem,
@@ -20,6 +24,9 @@ struct ChecklistItemRow: View {
         onToggle: @escaping () -> Void,
         onCommitEdit: @escaping (String) -> Result<Void, Error>,
         onDelete: @escaping () -> Void,
+        moveDestinations: [ChecklistMoveDestination] = [],
+        onMoveToChecklist: @escaping (UUID) -> Void = { _ in },
+        allowsReordering: Bool = true,
         onMoveRequested: @escaping () -> Void = {},
         onFailure: @escaping (Error) -> Void = { _ in }
     ) {
@@ -28,13 +35,81 @@ struct ChecklistItemRow: View {
         self.onToggle = onToggle
         self.onCommitEdit = onCommitEdit
         self.onDelete = onDelete
+        self.moveDestinations = moveDestinations
+        self.onMoveToChecklist = onMoveToChecklist
+        self.allowsReordering = allowsReordering
         self.onMoveRequested = onMoveRequested
         self.onFailure = onFailure
         _draftTitle = State(initialValue: item.title)
     }
 
+    @ViewBuilder
     var body: some View {
-        Group {
+        if moveDestinations.isEmpty || isEditing {
+            accessibleContent
+        } else {
+            accessibleContent
+                .accessibilityAction(named: Text("Move to List")) {
+                    isShowingMoveDestinations = true
+                }
+                .confirmationDialog(
+                    "Move to List",
+                    isPresented: $isShowingMoveDestinations
+                ) {
+                    ForEach(moveDestinations) { destination in
+                        Button {
+                            onMoveToChecklist(destination.id)
+                        } label: {
+                            Text(verbatim: destination.name)
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var accessibleContent: some View {
+        if !isEditing, allowsInlineEditing, allowsReordering {
+            commonContent
+                .accessibilityAction(named: Text("Edit")) {
+                    beginEditing()
+                }
+                .accessibilityAction(named: Text("Reorder")) {
+                    onMoveRequested()
+                }
+        } else if !isEditing, allowsInlineEditing {
+            commonContent
+                .accessibilityAction(named: Text("Edit")) {
+                    beginEditing()
+                }
+        } else if !isEditing, allowsReordering {
+            commonContent
+                .accessibilityAction(named: Text("Reorder")) {
+                    onMoveRequested()
+                }
+        } else {
+            commonContent
+        }
+    }
+
+    @ViewBuilder
+    private var commonContent: some View {
+        if isEditing {
+            baseContent
+        } else {
+            baseContent
+                .accessibilityAction(named: completionAccessibilityActionName) {
+                    onToggle()
+                }
+                .accessibilityAction(named: Text("Delete")) {
+                    onDelete()
+                }
+        }
+    }
+
+    private var baseContent: some View {
+        VStack(spacing: 0) {
             if isEditing {
                 editingContent
             } else {
@@ -48,35 +123,42 @@ struct ChecklistItemRow: View {
             }
         }
         .contextMenu {
-            Button("Edit", systemImage: "pencil") {
-                beginEditing()
+            if allowsInlineEditing, !isEditing {
+                Button("Edit", systemImage: "pencil") {
+                    beginEditing()
+                }
             }
 
-            Button(item.isCompleted ? "Mark Incomplete" : "Mark Complete", systemImage: item.isCompleted ? "circle" : "checkmark.circle") {
-                onToggle()
+            if item.isCompleted {
+                Button("Mark Incomplete", systemImage: "circle", action: onToggle)
+            } else {
+                Button("Mark Complete", systemImage: "checkmark.circle", action: onToggle)
             }
 
-            Button("Move", systemImage: "arrow.up.arrow.down") {
-                onMoveRequested()
+            if !moveDestinations.isEmpty, !isEditing {
+                Menu("Move to List", systemImage: "folder") {
+                    ForEach(moveDestinations) { destination in
+                        Button {
+                            onMoveToChecklist(destination.id)
+                        } label: {
+                            Text(verbatim: destination.name)
+                        }
+                    }
+                }
+            }
+
+            if allowsReordering, !isEditing {
+                Button("Reorder", systemImage: "arrow.up.arrow.down") {
+                    onMoveRequested()
+                }
             }
 
             Divider()
 
             Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
         }
-        .accessibilityAction(named: Text(item.isCompleted ? "Mark incomplete" : "Mark complete")) {
-            onToggle()
-        }
-        .accessibilityAction(named: Text("Edit")) {
-            beginEditing()
-        }
-        .accessibilityAction(named: Text("Move")) {
-            onMoveRequested()
-        }
-        .accessibilityAction(named: Text("Delete")) {
-            onDelete()
-        }
-        .accessibilityIdentifier("checklist-item-\(item.id.uuidString)")
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(ChecklistAccessibility.checklistItem(item.id))
         .onAppear {
             if !isEditing { draftTitle = item.title }
         }
@@ -100,23 +182,40 @@ struct ChecklistItemRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(item.isCompleted ? "Mark \(item.title) incomplete" : "Mark \(item.title) complete")
-            .accessibilityValue(item.isCompleted ? "Completed" : "Not completed")
+            .accessibilityLabel(ChecklistStrings.itemCompletionLabel(for: item.title, isCompleted: item.isCompleted))
+            .accessibilityValue(completionAccessibilityValue)
 
-            Button(action: beginEditing) {
-                Text(item.title)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .multilineTextAlignment(.leading)
-                    .foregroundStyle(item.isCompleted ? .secondary : .primary)
-                    .strikethrough(item.isCompleted)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!allowsInlineEditing)
-            .accessibilityLabel(item.title)
-            .accessibilityHint(allowsInlineEditing ? "Double tap to edit" : "Use the Move action to reorder")
+            titleContent
         }
         .padding(.vertical, 3)
+    }
+
+    @ViewBuilder
+    private var titleContent: some View {
+        if allowsInlineEditing {
+            Button(action: beginEditing) {
+                itemTitleLabel
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(item.title)
+            .accessibilityHint(titleAccessibilityHint)
+        } else {
+            // Keep the title as a draggable, non-button row body while list
+            // edit mode is active. A disabled nested Button can prevent the
+            // system List reorder gesture from receiving the touch.
+            itemTitleLabel
+                .accessibilityLabel(item.title)
+                .accessibilityHint(titleAccessibilityHint)
+        }
+    }
+
+    private var itemTitleLabel: some View {
+        Text(item.title)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .multilineTextAlignment(.leading)
+            .foregroundStyle(item.isCompleted ? .secondary : .primary)
+            .strikethrough(item.isCompleted)
+            .contentShape(Rectangle())
     }
 
     private var editingContent: some View {
@@ -152,6 +251,24 @@ struct ChecklistItemRow: View {
             }
         }
         .padding(.vertical, 3)
+    }
+
+    private var completionAccessibilityActionName: Text {
+        item.isCompleted ? Text("Mark incomplete") : Text("Mark complete")
+    }
+
+    private var completionAccessibilityValue: Text {
+        item.isCompleted ? Text("Completed") : Text("Not completed")
+    }
+
+    private var titleAccessibilityHint: Text {
+        if allowsInlineEditing {
+            return Text("Double tap to edit")
+        }
+        if allowsReordering {
+            return Text("Use the Reorder action to reorder")
+        }
+        return Text("Use the item actions")
     }
 
     private func beginEditing() {

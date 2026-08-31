@@ -45,7 +45,7 @@ struct AboutView: View {
                     .frame(maxWidth: 520)
 
                     if let appVersion {
-                        Text("Version \(appVersion)")
+                        Text(String(localized: "Version \(appVersion)"))
                             .font(.footnote)
                             .foregroundStyle(.tertiary)
                     }

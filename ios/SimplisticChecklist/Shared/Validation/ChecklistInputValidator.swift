@@ -10,15 +10,15 @@ enum ChecklistInputError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .emptyListName:
-            "Enter a list name."
+            String(localized: "Enter a list name.")
         case .listNameTooLong:
-            "List names can be up to 80 characters."
+            String(localized: "List names can be up to 80 characters.")
         case .duplicateListName:
-            "A list with this name already exists."
+            String(localized: "A list with this name already exists.")
         case .emptyItemTitle:
-            "Item text cannot be empty."
+            String(localized: "Item text cannot be empty.")
         case .itemTitleTooLong:
-            "Items can be up to 500 characters."
+            String(localized: "Items can be up to 500 characters.")
         }
     }
 }

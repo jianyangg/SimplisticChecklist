@@ -29,8 +29,18 @@ enum ChecklistOrderer {
     }
 
     static func normalize(_ checklists: [Checklist]) {
+        normalizeChecklists(checklists)
+        normalizeItems(in: checklists)
+    }
+
+    static func normalizeChecklists(_ checklists: [Checklist]) {
         for (index, checklist) in checklists.sorted(by: checklistSort).enumerated() {
             checklist.sortOrder = index
+        }
+    }
+
+    static func normalizeItems(in checklists: [Checklist]) {
+        for checklist in checklists {
             for (itemIndex, item) in checklist.items.sorted(by: itemSort).enumerated() {
                 item.sortOrder = itemIndex
             }

@@ -8,7 +8,10 @@ struct AppRootView: View {
         SortDescriptor(\Checklist.createdAt)
     ]) private var checklists: [Checklist]
 
-    @AppStorage(LegacyPreferenceKeys.nativeSelectedChecklistID)
+    @AppStorage(
+        LegacyPreferenceKeys.nativeSelectedChecklistID,
+        store: ChecklistLaunchConfiguration.selectionStore
+    )
     private var selectedChecklistValue = ""
 
     @State private var launchState: LaunchState = .loading
@@ -51,11 +54,11 @@ struct AppRootView: View {
             guard let newSelection else { return }
             selectedChecklistValue = newSelection.uuidString
         }
-        .onChange(of: checklists.map(\.id)) { _, values in
-            guard let selection, values.contains(selection) else {
-                selection = resolvedSelection(in: checklists)
-                return
-            }
+        .onChange(of: checklists.map(\.id)) { _, _ in
+            selection = ChecklistSelectionResolver.resolve(
+                preferred: selection,
+                in: checklists
+            )
         }
     }
 
@@ -70,14 +73,12 @@ struct AppRootView: View {
             mutationService = service
             let persistedChecklists = try service.fetchChecklists()
 
-            let validIDs = Set(persistedChecklists.map(\.id))
-            if let storedID = UUID(uuidString: selectedChecklistValue), validIDs.contains(storedID) {
-                selection = storedID
-            } else if validIDs.contains(result.selectedChecklistID) {
-                selection = result.selectedChecklistID
-            } else {
-                selection = resolvedSelection(in: persistedChecklists)
-            }
+            let storedID = UUID(uuidString: selectedChecklistValue)
+            let preferredID = storedID ?? result.selectedChecklistID
+            selection = ChecklistSelectionResolver.resolve(
+                preferred: preferredID,
+                in: persistedChecklists
+            )
             if let selection {
                 selectedChecklistValue = selection.uuidString
             }
@@ -88,18 +89,19 @@ struct AppRootView: View {
     }
 
     private func migrationDefaults() -> UserDefaults {
-        guard ProcessInfo.processInfo.arguments.contains("--ui-testing-in-memory") else {
+        guard ChecklistLaunchConfiguration.isUITesting else {
             return .standard
         }
 
-        let suiteName = "SimplisticChecklist.ui-testing"
-        let defaults = UserDefaults(suiteName: suiteName) ?? UserDefaults()
-        defaults.removePersistentDomain(forName: suiteName)
+        let suiteName = ChecklistLaunchConfiguration.uiTestingDefaultsSuite
+        let defaults = ChecklistLaunchConfiguration.selectionStore
+        if ChecklistLaunchConfiguration.isSeededLegacy {
+            LegacyUITestFixture.seed(into: defaults)
+        } else if ChecklistLaunchConfiguration.isFreshInMemory
+                    || ChecklistLaunchConfiguration.resetsPersistentStore {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
         return defaults
-    }
-
-    private func resolvedSelection(in checklists: [Checklist]) -> UUID? {
-        checklists.sorted(by: ChecklistOrderer.checklistSort).first?.id
     }
 
     @MainActor
@@ -125,6 +127,10 @@ struct AppRootView: View {
                 do { try service.addItem(to: id, title: title); return .success(()) }
                 catch { return .failure(error) }
             },
+            addItems: { id, titles in
+                do { try service.addItems(to: id, titles: titles); return .success(()) }
+                catch { return .failure(error) }
+            },
             toggleItem: { id in
                 do { try service.toggleItem(id: id); return .success(()) }
                 catch { return .failure(error) }
@@ -137,6 +143,10 @@ struct AppRootView: View {
                 do { try service.deleteItem(id: id); return .success(()) }
                 catch { return .failure(error) }
             },
+            moveItem: { itemID, checklistID in
+                do { try service.moveItem(id: itemID, to: checklistID); return .success(()) }
+                catch { return .failure(error) }
+            },
             reorderItems: { id, ids in
                 do { try service.reorderItems(in: id, ids: ids); return .success(()) }
                 catch { return .failure(error) }
@@ -147,6 +157,10 @@ struct AppRootView: View {
             },
             markAllIncomplete: { id in
                 do { try service.markAllIncomplete(in: id); return .success(()) }
+                catch { return .failure(error) }
+            },
+            duplicateChecklist: { id in
+                do { return .success(try service.duplicateChecklist(id: id)) }
                 catch { return .failure(error) }
             },
             canUndo: { service.canUndo() },

@@ -1,6 +1,6 @@
 # Simplistic Checklist: Native Swift Migration Plan
 
-Status: implementation-ready plan
+Status: implementation complete; Xcode/device validation pending
 Prepared: August 29, 2026
 Current implementation: Flutter 3-era application from 2023
 Target implementation: native SwiftUI and SwiftData application
@@ -226,14 +226,19 @@ List names do not need to be database keys. UUID identity makes duplicate names 
 These features improve common actions without adding a second task-management system:
 
 - Inline item entry instead of an add-item modal.
+- Paste several lines through “Add Multiple Items,” creating one item per
+  non-empty line in one undoable command.
 - Inline editing instead of a detail screen.
 - Manual reordering.
+- Move an item to another checklist from its context menu.
+- Duplicate a checklist as a reusable personal template.
 - Clear completed.
 - Show/hide completed.
+- Remember completed-item visibility independently for each checklist.
 - Undo.
 - Remaining-item counts.
 - Keyboard submit and common iPad keyboard shortcuts.
-- Share a checklist as plain text, only if the core release is stable and the share action remains in the secondary menu. This is a release-candidate enhancement, not a blocker.
+- Share a checklist as portable plain text through the system share sheet.
 
 ### 4.3 Explicit non-goals
 
@@ -300,10 +305,10 @@ Contents, in reading order:
 Toolbar/menu actions:
 
 - Rename List.
-- Edit Order.
-- Show or Hide Completed.
-- Mark All Incomplete.
-- Clear Completed…
+- Edit Order when at least one completion group has multiple items.
+- Show or Hide Completed when completed items exist.
+- Mark All Incomplete when completed items exist.
+- Clear Completed… when completed items exist.
 - Delete List… when more than one list exists.
 - Undo/Redo when available, exposed through standard system commands and the menu rather than permanent toolbar clutter.
 
@@ -314,7 +319,11 @@ The list should use native `List` and `Section` behavior. Avoid wrapping every r
 - A single-line or vertically expanding `TextField` labeled “New item.”
 - A visible Add button that is disabled for whitespace-only input.
 - Return submits the item and keeps focus so multiple items can be entered quickly.
-- An empty-state button focuses the same composer rather than opening a second creation flow.
+- Command-N opens the new-list prompt when a hardware keyboard is available.
+- The composer remains the one primary add action even when the list is empty;
+  the empty state explains what to do but does not add a competing button.
+  Focus is intentionally user-controlled so VoiceOver, hardware keyboards, and
+  list selection are not interrupted by an automatic focus jump.
 - On iOS 26, use the standard safe-area bar API where it provides the correct system functional layer. On iOS 17–18, use a restrained safe-area inset with system material. Do not manually imitate Liquid Glass.
 
 ### 5.5 Checklist row
@@ -496,10 +505,14 @@ Use a versioned SwiftData schema from the first native release so later native s
 - `ModelContainerFactory` creates the persistent container and an in-memory container for tests/previews.
 - `AppLaunchState` owns store-open and one-time-migration state.
 - SwiftData queries provide read state to the sidebar and selected checklist.
-- `ChecklistMutationService`, isolated to the main actor, is the single boundary for validated model mutations and explicit saves.
-- The root view stores the selected checklist UUID using `AppStorage`; it resolves that UUID against actual models before presenting detail.
+- `ChecklistMutationService`, isolated to the main actor, is the single boundary for validated model mutations and explicit saves. Every public mutation is one named command with exactly one save on success; failed saves roll back without entering history. Reversible changes are stored as service-owned before/after snapshots because SwiftData's implicit undo groups cannot provide deterministic command boundaries around explicit saves.
+- The root view stores the selected checklist UUID using `AppStorage` (the
+  standard store in production and an isolated suite for UI-test launches); it
+  resolves that UUID against actual models before presenting detail.
 - Views own only ephemeral UI state such as draft text, focus, prompt visibility, edit mode, and completed-item visibility.
-- Use Swift's `UndoManager` integration for reversible model changes.
+- Keep undo and redo in the mutation service rather than binding them to SwiftData's
+  implicit `UndoManager` groups. The service exposes the same menu/system-facing
+  actions while retaining exact, retryable save semantics.
 
 A generic repository abstraction is not needed for this local-only app. A focused mutation service and in-memory SwiftData tests give sufficient separation without adding speculative layers.
 
@@ -520,10 +533,10 @@ The data set is small and all user mutations originate in the UI, so use the mai
 For every command:
 
 1. Validate input.
-2. Register a named undo operation where appropriate.
-3. Apply the mutation.
-4. Explicitly save the model context.
-5. On error, roll back or restore the prior snapshot and surface a user-readable error.
+2. Capture the pre-mutation snapshot and apply the mutation.
+3. Explicitly save the model context exactly once.
+4. Append the before/after snapshot pair to history only after the save succeeds.
+5. On error, roll back or restore the prior snapshot, leave undo/redo unchanged, and surface a user-readable error.
 
 Do not add background actors, synchronization engines, or custom queues until measured need exists.
 
@@ -614,6 +627,8 @@ Before implementation, capture preference dictionaries for:
 - A partially written add-item state with an empty completion array.
 - A migration retry after a simulated save failure.
 - A second launch after successful import, proving no duplicates.
+- Unprefixed keys that resemble Flutter keys, proving unrelated defaults are
+  ignored.
 
 ### 7.6 Upgrade acceptance test
 
@@ -715,7 +730,13 @@ Add one on-disk temporary-store test to prove persistence across container recre
 
 ### 9.3 XCUITest flows
 
-- Fresh launch shows one empty list and focuses/adds the first item.
+- Launch tests with explicit, deterministic arguments: fresh in-memory for
+  isolated workflows, a named persistent UI-test store for relaunch checks,
+  and an in-memory seeded legacy fixture for the migration path. The
+  persistent mode supports an explicit reset argument; no test silently
+  deletes a production store.
+- Fresh launch shows one empty list and one visible composer; the test enters
+  the first item explicitly rather than relying on automatic focus.
 - Add several items rapidly with Return.
 - Complete and uncomplete an item.
 - Edit item text.

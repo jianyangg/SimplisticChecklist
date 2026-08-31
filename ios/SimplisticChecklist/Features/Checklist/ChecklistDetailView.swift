@@ -5,24 +5,51 @@ struct ChecklistDetailView: View {
     let allChecklists: [Checklist]
     @Binding var selection: UUID?
     let actions: ChecklistMutationActions
+    let onChecklistDeleted: (UUID) -> Void
+    private let displayPreferences: ChecklistDisplayPreferences
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var editMode: EditMode = .inactive
-    @State private var showCompleted = true
+    @State private var showCompleted: Bool
+    @State private var isShowingBulkEntry = false
     @State private var isShowingClearCompletedConfirmation = false
     @State private var isShowingDeleteListConfirmation = false
     @State private var isShowingRename = false
     @State private var mutationError: MutationErrorPresentation?
 
+    init(
+        checklist: Checklist,
+        allChecklists: [Checklist],
+        selection: Binding<UUID?>,
+        actions: ChecklistMutationActions,
+        onChecklistDeleted: @escaping (UUID) -> Void
+    ) {
+        self.checklist = checklist
+        self.allChecklists = allChecklists
+        _selection = selection
+        self.actions = actions
+        self.onChecklistDeleted = onChecklistDeleted
+
+        let preferences = ChecklistDisplayPreferences(
+            defaults: ChecklistLaunchConfiguration.selectionStore
+        )
+        displayPreferences = preferences
+        _showCompleted = State(
+            initialValue: preferences.showsCompleted(for: checklist.id)
+        )
+    }
+
     private var incompleteItems: [ChecklistItem] {
         checklist.items
             .filter { !$0.isCompleted }
-            .sorted(by: Self.itemSort)
+            .sorted(by: ChecklistOrderer.itemSort)
     }
 
     private var completedItems: [ChecklistItem] {
         checklist.items
             .filter(\.isCompleted)
-            .sorted(by: Self.itemSort)
+            .sorted(by: ChecklistOrderer.itemSort)
     }
 
     private var hasItems: Bool {
@@ -37,8 +64,14 @@ struct ChecklistDetailView: View {
         editMode.isEditing
     }
 
+    private var canReorderItems: Bool {
+        incompleteItems.count > 1 || (showCompleted && completedItems.count > 1)
+    }
+
     private var remainingSummary: LocalizedStringKey {
-        ChecklistStrings.remaining(incompleteItems.count)
+        incompleteItems.isEmpty
+            ? ChecklistStrings.allItemsComplete
+            : ChecklistStrings.remaining(incompleteItems.count)
     }
 
     var body: some View {
@@ -91,47 +124,78 @@ struct ChecklistDetailView: View {
             ToolbarItem(placement: .topBarLeading) {
                 if isOrdering {
                     Button("Done") {
-                        withAnimation { editMode = .inactive }
+                        setEditMode(.inactive)
                     }
+                    .accessibilityIdentifier(ChecklistAccessibility.detailDoneButton)
                 }
             }
 
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Button(isOrdering ? "Finish Reordering" : "Edit Order", systemImage: "arrow.up.arrow.down") {
-                        withAnimation {
-                            editMode = isOrdering ? .inactive : .active
+                    if canReorderItems || isOrdering {
+                        if isOrdering {
+                            Button("Finish Reordering", systemImage: "arrow.up.arrow.down") {
+                                setEditMode(.inactive)
+                            }
+                            .accessibilityIdentifier(ChecklistAccessibility.editOrderButton)
+                        } else {
+                            Button("Edit Order", systemImage: "arrow.up.arrow.down") {
+                                setEditMode(.active)
+                            }
+                            .accessibilityIdentifier(ChecklistAccessibility.editOrderButton)
                         }
                     }
 
                     Button("Rename List", systemImage: "pencil") {
                         isShowingRename = true
                     }
-                    .accessibilityIdentifier("rename-list-button")
+                    .accessibilityIdentifier(ChecklistAccessibility.renameListButton)
 
-                    Divider()
-
-                    Toggle(isOn: $showCompleted) {
-                        Label("Show Completed", systemImage: "checkmark.circle")
+                    Button("Add Multiple Items…", systemImage: "text.badge.plus") {
+                        isShowingBulkEntry = true
                     }
-                    .accessibilityIdentifier("show-completed-toggle")
+                    .accessibilityIdentifier(ChecklistAccessibility.addMultipleItemsButton)
 
-                    Button("Mark All Incomplete", systemImage: "arrow.uturn.backward.circle") {
-                        handle(actions.markAllIncomplete(checklist.id))
+                    Button("Duplicate List", systemImage: "plus.square.on.square") {
+                        switch actions.duplicateChecklist(checklist.id) {
+                        case .success(let duplicateID):
+                            selection = duplicateID
+                        case .failure(let error):
+                            mutationError = MutationErrorPresentation(error: error)
+                        }
                     }
-                    .disabled(completedItems.isEmpty)
+                    .accessibilityIdentifier(ChecklistAccessibility.duplicateListButton)
 
-                    Button("Clear Completed…", systemImage: "trash", role: .destructive) {
-                        isShowingClearCompletedConfirmation = true
+                    ShareLink(item: ChecklistTextExporter.text(for: checklist)) {
+                        Label("Share List", systemImage: "square.and.arrow.up")
                     }
-                    .disabled(completedItems.isEmpty)
-                    .accessibilityIdentifier("clear-completed-button")
+                    .accessibilityIdentifier(ChecklistAccessibility.shareListButton)
+
+                    if !completedItems.isEmpty {
+                        Divider()
+
+                        Toggle(isOn: $showCompleted) {
+                            Label("Show Completed", systemImage: "checkmark.circle")
+                        }
+                        .accessibilityIdentifier(ChecklistAccessibility.showCompletedToggle)
+
+                        Button("Mark All Incomplete", systemImage: "arrow.uturn.backward.circle") {
+                            handle(actions.markAllIncomplete(checklist.id))
+                        }
+                        .accessibilityIdentifier(ChecklistAccessibility.markAllIncompleteButton)
+
+                        Button("Clear Completed…", systemImage: "trash", role: .destructive) {
+                            isShowingClearCompletedConfirmation = true
+                        }
+                        .accessibilityIdentifier(ChecklistAccessibility.clearCompletedButton)
+                    }
 
                     if allChecklists.count > 1 {
                         Divider()
                         Button("Delete List…", systemImage: "trash", role: .destructive) {
                             isShowingDeleteListConfirmation = true
                         }
+                        .accessibilityIdentifier(ChecklistAccessibility.deleteListButton)
                     }
 
                     if actions.canUndo() {
@@ -139,18 +203,22 @@ struct ChecklistDetailView: View {
                         Button("Undo", systemImage: "arrow.uturn.backward") {
                             handle(actions.undo())
                         }
+                        .keyboardShortcut("z", modifiers: .command)
+                        .accessibilityIdentifier(ChecklistAccessibility.undoButton)
                     }
 
                     if actions.canRedo() {
                         Button("Redo", systemImage: "arrow.uturn.forward") {
                             handle(actions.redo())
                         }
+                        .keyboardShortcut("z", modifiers: [.command, .shift])
+                        .accessibilityIdentifier(ChecklistAccessibility.redoButton)
                     }
                 } label: {
                     Label("List Actions", systemImage: "ellipsis.circle")
                 }
                 .accessibilityLabel("List actions")
-                .accessibilityIdentifier("list-actions-button")
+                .accessibilityIdentifier(ChecklistAccessibility.listActionsButton)
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -171,12 +239,16 @@ struct ChecklistDetailView: View {
                     .filter { $0.id != checklist.id }
                     .map(\.name)
             ) { name in
-                let result = actions.renameChecklist(checklist.id, name)
-                if case .failure(let error) = result {
-                    mutationError = MutationErrorPresentation(error: error)
-                }
-                return result
+                actions.renameChecklist(checklist.id, name)
             }
+        }
+        .sheet(isPresented: $isShowingBulkEntry) {
+            BulkItemEntryView { titles in
+                actions.addItems(checklist.id, titles)
+            }
+        }
+        .onChange(of: showCompleted) { _, newValue in
+            displayPreferences.setShowsCompleted(newValue, for: checklist.id)
         }
         .confirmationDialog(
             "Clear completed items?",
@@ -185,6 +257,7 @@ struct ChecklistDetailView: View {
             Button("Clear Completed", role: .destructive) {
                 handle(actions.clearCompleted(checklist.id))
             }
+            .accessibilityIdentifier(ChecklistAccessibility.clearCompletedConfirmationButton)
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Completed items will be removed from this list.")
@@ -194,19 +267,21 @@ struct ChecklistDetailView: View {
             isPresented: $isShowingDeleteListConfirmation
         ) {
             Button("Delete List", role: .destructive) {
+                let wasSelected = selection == checklist.id
                 let result = actions.deleteChecklist(checklist.id)
-                handle(result)
-                if case .success = result {
-                    selection = nil
+                if case .success = result, wasSelected {
+                    onChecklistDeleted(checklist.id)
                 }
+                handle(result)
             }
+            .accessibilityIdentifier(ChecklistAccessibility.deleteListConfirmationButton)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("\"\(checklist.name)\" and all of its items will be deleted.")
+            Text(ChecklistStrings.deleteListMessage(for: checklist.name))
         }
         .alert(item: $mutationError) { presentation in
             Alert(
-                title: Text("Couldn't save"),
+                title: Text("Couldn't Complete Action"),
                 message: Text(presentation.message),
                 dismissButton: .default(Text("OK"))
             )
@@ -222,17 +297,23 @@ struct ChecklistDetailView: View {
                 handle(actions.toggleItem(item.id))
             },
             onCommitEdit: { title in
-                let result = actions.updateItem(item.id, title)
-                if case .failure(let error) = result {
-                    mutationError = MutationErrorPresentation(error: error)
-                }
-                return result
+                actions.updateItem(item.id, title)
             },
             onDelete: {
                 handle(actions.deleteItem(item.id))
             },
+            moveDestinations: isOrdering
+                ? []
+                : allChecklists
+                    .filter { $0.id != checklist.id }
+                    .sorted(by: ChecklistOrderer.checklistSort)
+                    .map { ChecklistMoveDestination(id: $0.id, name: $0.name) },
+            onMoveToChecklist: { destinationID in
+                handle(actions.moveItem(item.id, destinationID))
+            },
+            allowsReordering: canReorderItems && !isOrdering,
             onMoveRequested: {
-                withAnimation { editMode = .active }
+                setEditMode(.active)
             },
             onFailure: { error in
                 mutationError = MutationErrorPresentation(error: error)
@@ -254,29 +335,18 @@ struct ChecklistDetailView: View {
         handle(actions.reorderItems(checklist.id, ids))
     }
 
+    private func setEditMode(_ mode: EditMode) {
+        if reduceMotion {
+            editMode = mode
+        } else {
+            withAnimation { editMode = mode }
+        }
+    }
+
     private func handle(_ result: Result<Void, Error>) {
         if case .failure(let error) = result {
             mutationError = MutationErrorPresentation(error: error)
         }
     }
 
-    private static func itemSort(_ lhs: ChecklistItem, _ rhs: ChecklistItem) -> Bool {
-        if lhs.sortOrder != rhs.sortOrder {
-            return lhs.sortOrder < rhs.sortOrder
-        }
-        if lhs.createdAt != rhs.createdAt {
-            return lhs.createdAt < rhs.createdAt
-        }
-        return lhs.id.uuidString < rhs.id.uuidString
-    }
-}
-
-private struct MutationErrorPresentation: Identifiable {
-    let id = UUID()
-    let message: String
-
-    init(error: Error) {
-        let localized = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-        message = localized.isEmpty ? "The change could not be saved. Please try again." : localized
-    }
 }

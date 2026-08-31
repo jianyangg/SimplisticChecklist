@@ -20,6 +20,23 @@ struct ChecklistDomainTests {
         }
     }
 
+    @Test("accepts the documented input limits and rejects one character over")
+    func enforcesInputBoundaries() throws {
+        let validListName = String(repeating: "L", count: ChecklistInputValidator.maximumListNameLength)
+        let longListName = validListName + "L"
+        let validItemTitle = String(repeating: "I", count: ChecklistInputValidator.maximumItemTitleLength)
+        let longItemTitle = validItemTitle + "I"
+
+        #expect(try ChecklistInputValidator.listName(validListName) == validListName)
+        #expect(throws: ChecklistInputError.self) {
+            try ChecklistInputValidator.listName(longListName)
+        }
+        #expect(try ChecklistInputValidator.itemTitle(validItemTitle) == validItemTitle)
+        #expect(throws: ChecklistInputError.self) {
+            try ChecklistInputValidator.itemTitle(longItemTitle)
+        }
+    }
+
     @Test("sorts incomplete items before completed items while preserving order")
     func sortsItems() {
         let first = ChecklistItem(
@@ -51,5 +68,62 @@ struct ChecklistDomainTests {
 
         #expect(ChecklistOrderer.normalizedIDs([second.id, first.id], from: group) == [second.id, first.id])
         #expect(ChecklistOrderer.normalizedIDs([first.id, first.id], from: group) == [first.id])
+    }
+
+    @Test("uses UUID as the final deterministic tie breaker")
+    func sortsEqualOrdersDeterministically() {
+        let olderID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        let newerID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+        let timestamp = Date(timeIntervalSinceReferenceDate: 100)
+        let first = ChecklistItem(
+            id: newerID,
+            title: "Second",
+            sortOrder: 0,
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let second = ChecklistItem(
+            id: olderID,
+            title: "First",
+            sortOrder: 0,
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+
+        #expect([first, second].sorted(by: ChecklistOrderer.itemSort).map(\.id) == [olderID, newerID])
+    }
+
+    @Test("normalizes gaps and duplicate order values")
+    func normalizesOrderValues() {
+        let timestamp = Date(timeIntervalSinceReferenceDate: 100)
+        let checklist = Checklist(
+            name: "Work",
+            sortOrder: 8,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            items: [
+                ChecklistItem(
+                    id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+                    title: "Done",
+                    isCompleted: true,
+                    sortOrder: 20,
+                    createdAt: timestamp,
+                    updatedAt: timestamp
+                ),
+                ChecklistItem(
+                    id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+                    title: "Todo",
+                    sortOrder: 20,
+                    createdAt: timestamp,
+                    updatedAt: timestamp
+                )
+            ]
+        )
+
+        ChecklistOrderer.normalize([checklist])
+
+        #expect(checklist.sortOrder == 0)
+        #expect(checklist.items.sorted(by: ChecklistOrderer.itemSort).map(\.title) == ["Todo", "Done"])
+        #expect(checklist.items.map(\.sortOrder).sorted() == [0, 1])
     }
 }

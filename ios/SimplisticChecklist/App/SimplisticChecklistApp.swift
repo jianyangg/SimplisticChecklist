@@ -39,7 +39,12 @@ struct SimplisticChecklistApp: App {
     }
 
     private static func makeContainer() throws -> ModelContainer {
-        if ProcessInfo.processInfo.arguments.contains("--ui-testing-in-memory") {
+        if ChecklistLaunchConfiguration.isPersistent {
+            return try ModelContainerFactory.makePersistentUITesting(
+                reset: ChecklistLaunchConfiguration.resetsPersistentStore
+            )
+        }
+        if ChecklistLaunchConfiguration.isSeededLegacy || ChecklistLaunchConfiguration.isFreshInMemory {
             return try ModelContainerFactory.makeInMemory()
         }
         return try ModelContainerFactory.makePersistent()
@@ -54,7 +59,11 @@ private struct StoreUnavailableView: View {
         ContentUnavailableView {
             Label("Storage Unavailable", systemImage: "externaldrive.badge.xmark")
         } description: {
-            Text(message ?? "Your checklists could not be opened. Please try again.")
+            if let message {
+                Text(verbatim: message)
+            } else {
+                Text("Your checklists could not be opened. Please try again.")
+            }
         } actions: {
             Button("Try Again", action: onRetry)
             .buttonStyle(.borderedProminent)

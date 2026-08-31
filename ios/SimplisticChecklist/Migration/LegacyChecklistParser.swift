@@ -11,6 +11,9 @@ struct LegacyChecklistImport: Equatable {
         case recoveredTutorialItems
     }
 
+    /// Original preference-key component, retained only to resolve the
+    /// previously selected list even when its display name needs recovery.
+    let legacyName: String
     let name: String
     let items: [LegacyItemImport]
     let source: Source
@@ -67,7 +70,7 @@ struct LegacyChecklistParser {
             // The tutorial checklist is stored separately from the user list
             // names. Treating it as a normal named list would import all seven
             // tutorial prompts into native data.
-            if listName.trimmingCharacters(in: .whitespacesAndNewlines) == Self.tutorialSentinel {
+            if listName == Self.tutorialSentinel {
                 continue
             }
 
@@ -78,7 +81,12 @@ struct LegacyChecklistParser {
                 completionValue: reader.value(forKey: LegacyPreferenceKeys.completionKey(for: listName)),
                 diagnostics: &diagnostics
             )
-            imports.append(LegacyChecklistImport(name: displayName, items: items, source: .namedList))
+            imports.append(LegacyChecklistImport(
+                legacyName: listName,
+                name: displayName,
+                items: items,
+                source: .namedList
+            ))
         }
 
         let tutorialItems = parseItems(
@@ -89,6 +97,7 @@ struct LegacyChecklistParser {
         let customTutorialItems = tutorialItems.filter { !Self.tutorialItemTitles.contains($0.title) }
         if !customTutorialItems.isEmpty {
             imports.append(LegacyChecklistImport(
+                legacyName: Self.tutorialSentinel,
                 name: "Checklist",
                 items: customTutorialItems,
                 source: .recoveredTutorialItems
@@ -151,14 +160,17 @@ struct LegacyChecklistParser {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             diagnostics.usedFallbackNames += 1
-            return "Untitled List"
+            return String(localized: "Untitled List")
         }
         return trimmed
     }
 
     private func parseCompletion(_ value: Any) -> Bool? {
         guard let string = value as? String else { return nil }
-        switch string.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        // Flutter persisted the literal strings "true" and "false". Do not
+        // trim here: whitespace indicates a malformed value and should be
+        // diagnosed rather than silently changing the user's data.
+        switch string.lowercased() {
         case "true": return true
         case "false": return false
         default: return nil
@@ -173,6 +185,6 @@ struct LegacyChecklistParser {
     }
 
     private func stringValue(_ value: Any?) -> String? {
-        (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        value as? String
     }
 }

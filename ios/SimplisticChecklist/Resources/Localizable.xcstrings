@@ -1,7 +1,8 @@
 {
   "sourceLanguage" : "en",
+  "version" : "1.0",
   "strings" : {
-    "checklist.allItemsComplete" : {
+    "All items complete" : {
       "comment" : "Accessibility value shown when a checklist has no incomplete items.",
       "extractionState" : "manual",
       "localizations" : {
@@ -81,6 +82,10 @@
         }
       }
     },
+    "All Done" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "All Done" } } }
+    },
     "Show Completed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -91,6 +96,421 @@
           }
         }
       }
+    },
+    "Loading checklists…" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading checklists…" } } }
+    },
+    "Opening checklists…" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Opening checklists…" } } }
+    },
+    "Couldn’t Open Checklists" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn’t Open Checklists" } } }
+    },
+    "Retry" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } } }
+    },
+    "Storage Unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Storage Unavailable" } } }
+    },
+    "Your checklists could not be opened. Please try again." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your checklists could not be opened. Please try again." } } }
+    },
+    "Try Again" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Try Again" } } }
+    },
+    "No Checklist Selected" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Checklist Selected" } } }
+    },
+    "Choose a list to see its items." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose a list to see its items." } } }
+    },
+    "To Do" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "To Do" } } }
+    },
+    "Completed" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Completed" } } }
+    },
+    "Done" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } } }
+    },
+    "Finish Reordering" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish Reordering" } } }
+    },
+    "Edit Order" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Order" } } }
+    },
+    "Rename List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename List" } } }
+    },
+    "Mark All Incomplete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark All Incomplete" } } }
+    },
+    "Clear Completed…" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Completed…" } } }
+    },
+    "Delete List…" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete List…" } } }
+    },
+    "Undo" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Undo" } } }
+    },
+    "Redo" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Redo" } } }
+    },
+    "List Actions" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "List Actions" } } }
+    },
+    "List actions" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "List actions" } } }
+    },
+    "Clear completed items?" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear completed items?" } } }
+    },
+    "Clear Completed" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Completed" } } }
+    },
+    "Cancel" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } } }
+    },
+    "Completed items will be removed from this list." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Completed items will be removed from this list." } } }
+    },
+    "Delete this list?" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this list?" } } }
+    },
+    "Delete List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete List" } } }
+    },
+    "Couldn't Complete Action" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't Complete Action" } } }
+    },
+    "OK" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } } }
+    },
+    "Lists" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Lists" } } }
+    },
+    "Edit" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } } }
+    },
+    "Finish editing lists" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish editing lists" } } }
+    },
+    "Edit lists" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit lists" } } }
+    },
+    "New List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "New List" } } }
+    },
+    "About" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } } }
+    },
+    "More" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "More" } } }
+    },
+    "Rename" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename" } } }
+    },
+    "Delete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } } }
+    },
+    "Add" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add" } } }
+    },
+    "Add item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add item" } } }
+    },
+    "Adds the text to this checklist" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Adds the text to this checklist" } } }
+    },
+    "Item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Item" } } }
+    },
+    "Mark incomplete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark incomplete" } } }
+    },
+    "Mark complete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark complete" } } }
+    },
+    "Mark Complete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark Complete" } } }
+    },
+    "Mark Incomplete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark Incomplete" } } }
+    },
+    "Not completed" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Not completed" } } }
+    },
+    "Double tap to edit" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Double tap to edit" } } }
+    },
+    "Use the Reorder action to reorder" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use the Reorder action to reorder" } } }
+    },
+    "Use the item actions" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use the item actions" } } }
+    },
+    "Edit item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit item" } } }
+    },
+    "Save item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Save item" } } }
+    },
+    "Cancel editing" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel editing" } } }
+    },
+    "List name" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "List name" } } }
+    },
+    "Save" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } } }
+    },
+    "Simplistic Checklist" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Simplistic Checklist" } } }
+    },
+    "A fast, calm checklist that stays out of the way." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A fast, calm checklist that stays out of the way." } } }
+    },
+    "Inspired by the idea that a short checklist can keep important work on track." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Inspired by the idea that a short checklist can keep important work on track." } } }
+    },
+    "Your lists stay on this device. There are no accounts, ads, analytics, or network requests." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your lists stay on this device. There are no accounts, ads, analytics, or network requests." } } }
+    },
+    "“No wise pilot, no matter how great his talent and experience, fails to use his checklist.”" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "“No wise pilot, no matter how great his talent and experience, fails to use his checklist.”" } } }
+    },
+    "— Charlie Munger" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "— Charlie Munger" } } }
+    },
+    "Version %@" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Version %@" } } }
+    },
+    "\"%@\" and all of its items will be deleted." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\"%@\" and all of its items will be deleted." } } }
+    },
+    "Mark %@ complete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark %@ complete" } } }
+    },
+    "Mark %@ incomplete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark %@ incomplete" } } }
+    },
+    "Checklist" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Checklist" } } }
+    },
+    "Untitled List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled List" } } }
+    },
+    "Enter a list name." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter a list name." } } }
+    },
+    "List names can be up to 80 characters." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "List names can be up to 80 characters." } } }
+    },
+    "A list with this name already exists." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A list with this name already exists." } } }
+    },
+    "Item text cannot be empty." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Item text cannot be empty." } } }
+    },
+    "Items can be up to 500 characters." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Items can be up to 500 characters." } } }
+    },
+    "Keep at least one checklist." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep at least one checklist." } } }
+    },
+    "This checklist is no longer available." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This checklist is no longer available." } } }
+    },
+    "This item is no longer available." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This item is no longer available." } } }
+    },
+    "The order could not be updated." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The order could not be updated." } } }
+    },
+    "There is nothing to undo." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "There is nothing to undo." } } }
+    },
+    "There is nothing to redo." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "There is nothing to redo." } } }
+    },
+    "The change could not be saved. Please try again." : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The change could not be saved. Please try again." } } }
+    },
+    "Add Item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Item" } } }
+    },
+    "Edit Item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Item" } } }
+    },
+    "Change Completion" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Change Completion" } } }
+    },
+    "Delete Item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Item" } } }
+    },
+    "Reorder Items" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Reorder Items" } } }
+    },
+    "Clear Completed Items" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Completed Items" } } }
+    },
+    "Mark All Items Incomplete" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark All Items Incomplete" } } }
+    },
+    "Create List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create List" } } }
+    },
+    "Reorder Lists" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Reorder Lists" } } }
+    },
+    "Copy" : {
+      "comment" : "Suffix used for a duplicated checklist name.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy" } } }
+    },
+    "Add Multiple Items" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Multiple Items" } } }
+    },
+    "Add Multiple Items…" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Multiple Items…" } } }
+    },
+    "Add Items" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Items" } } }
+    },
+    "One item per line" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "One item per line" } } }
+    },
+    "Checklist items" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Checklist items" } } }
+    },
+    "%lld items to add" : {
+      "comment" : "The number of nonempty lines that will be added as checklist items.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld item to add" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld items to add" } }
+            }
+          }
+        }
+      }
+    },
+    "Duplicate List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Duplicate List" } } }
+    },
+    "Share List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Share List" } } }
+    },
+    "Move to List" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Move to List" } } }
+    },
+    "Move Item" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Move Item" } } }
+    },
+    "Reorder" : {
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Reorder" } } }
     }
   }
 }

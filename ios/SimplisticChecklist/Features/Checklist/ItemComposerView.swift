@@ -20,7 +20,7 @@ struct ItemComposerView: View {
                 .submitLabel(.done)
                 .onSubmit(commit)
                 .accessibilityLabel("New item")
-                .accessibilityIdentifier("item-composer-field")
+                .accessibilityIdentifier(ChecklistAccessibility.itemComposerField)
 
             Button(action: commit) {
                 Label("Add", systemImage: "plus")
@@ -31,7 +31,7 @@ struct ItemComposerView: View {
             .disabled(trimmedDraft.isEmpty)
             .accessibilityLabel("Add item")
             .accessibilityHint("Adds the text to this checklist")
-            .accessibilityIdentifier("item-composer-add-button")
+            .accessibilityIdentifier(ChecklistAccessibility.itemComposerAddButton)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)

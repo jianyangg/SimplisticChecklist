@@ -33,7 +33,7 @@ final class LegacyChecklistMigrator {
                 // A receipt without a checklist is an invalid native state,
                 // but it is recoverable without rereading legacy values or
                 // duplicating an import.
-                let checklist = Checklist(name: "Checklist", sortOrder: 0)
+                let checklist = Checklist(name: String(localized: "Checklist"), sortOrder: 0)
                 context.insert(checklist)
                 receipt.selectedChecklistID = checklist.id
                 try save()
@@ -71,7 +71,7 @@ final class LegacyChecklistMigrator {
         let imports = mergedImports(plan.lists)
 
         if imports.isEmpty {
-            let checklist = Checklist(name: "Checklist", sortOrder: 0)
+            let checklist = Checklist(name: String(localized: "Checklist"), sortOrder: 0)
             context.insert(checklist)
             context.insert(ChecklistMigrationReceipt(selectedChecklistID: checklist.id))
             try save()
@@ -94,8 +94,14 @@ final class LegacyChecklistMigrator {
                 )
                 context.insert(item)
                 checklist.items.append(item)
+                item.checklist = checklist
             }
-            inserted.append((displayName: name, legacyName: importedList.name, source: importedList.source, id: checklist.id))
+            inserted.append((
+                displayName: name,
+                legacyName: importedList.legacyName,
+                source: importedList.source,
+                id: checklist.id
+            ))
         }
 
         guard let firstInsertedID = inserted.first?.id else {
@@ -167,7 +173,8 @@ final class LegacyChecklistMigrator {
             // the recovered list when necessary, preserving both collections
             // and allowing the legacy tutorial selection to resolve exactly.
             result.append(LegacyChecklistImport(
-                name: "Checklist",
+                legacyName: LegacyChecklistParser.tutorialSentinel,
+                name: String(localized: "Checklist"),
                 items: recoveredTutorialItems,
                 source: .recoveredTutorialItems
             ))
@@ -181,6 +188,7 @@ final class LegacyChecklistMigrator {
         inserted: [(displayName: String, legacyName: String, source: LegacyChecklistImport.Source, id: UUID)]
     ) -> UUID? {
         guard let lastLoadedListName else { return nil }
+        let normalizedSelection = lastLoadedListName.trimmingCharacters(in: .whitespacesAndNewlines)
         if lastLoadedListName == LegacyChecklistParser.tutorialSentinel {
             return inserted.first(where: {
                 $0.source == .recoveredTutorialItems
@@ -196,13 +204,15 @@ final class LegacyChecklistMigrator {
             return exact.id
         }
         return inserted.first(where: {
-            $0.source == .namedList && $0.legacyName.caseInsensitiveCompare(lastLoadedListName) == .orderedSame
+            guard $0.source == .namedList else { return false }
+            let normalizedLegacyName = $0.legacyName.trimmingCharacters(in: .whitespacesAndNewlines)
+            return normalizedLegacyName.caseInsensitiveCompare(normalizedSelection) == .orderedSame
         })?.id
     }
 
     private func uniqueName(_ requested: String, usedNames: inout Set<String>) -> String {
         let base = requested.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "Untitled List"
+            ? String(localized: "Untitled List")
             : requested.trimmingCharacters(in: .whitespacesAndNewlines)
         var candidate = base
         var suffix = 2
@@ -215,7 +225,10 @@ final class LegacyChecklistMigrator {
     }
 
     private func nameKey(_ name: String) -> String {
-        name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        name.folding(
+            options: [.caseInsensitive, .diacriticInsensitive],
+            locale: Locale(identifier: "en_US_POSIX")
+        )
     }
 
     private func persistSelection(_ id: UUID) {

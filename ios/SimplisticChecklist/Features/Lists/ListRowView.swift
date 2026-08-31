@@ -12,7 +12,6 @@ struct ListRowView: View {
     var body: some View {
         HStack(spacing: 10) {
             Text(checklist.name)
-                .lineLimit(2)
                 .multilineTextAlignment(.leading)
 
             Spacer(minLength: 8)
@@ -28,10 +27,12 @@ struct ListRowView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(checklist.name)
         .accessibilityValue(
-            remainingCount == 0
+            checklist.items.isEmpty
+                ? ChecklistStrings.noItemsYet
+                : remainingCount == 0
                 ? ChecklistStrings.allItemsComplete
                 : ChecklistStrings.remaining(remainingCount)
         )
-        .accessibilityIdentifier("checklist-row-\(checklist.id.uuidString)")
+        .accessibilityIdentifier(ChecklistAccessibility.checklistRow(checklist.id))
     }
 }

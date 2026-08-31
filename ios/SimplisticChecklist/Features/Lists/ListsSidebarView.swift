@@ -4,6 +4,9 @@ struct ListsSidebarView: View {
     let checklists: [Checklist]
     @Binding var selection: UUID?
     let actions: ChecklistMutationActions
+    let onChecklistDeleted: (UUID) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var editMode: EditMode = .inactive
     @State private var listPrompt: ListPromptRequest?
@@ -43,12 +46,21 @@ struct ListsSidebarView: View {
         .navigationTitle("Lists")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(isEditing ? "Done" : "Edit") {
-                    withAnimation {
-                        editMode = isEditing ? .inactive : .active
+                if checklists.count > 1 || isEditing {
+                    if isEditing {
+                        Button("Done") {
+                            setEditMode(.inactive)
+                        }
+                        .accessibilityLabel("Finish editing lists")
+                        .accessibilityIdentifier(ChecklistAccessibility.editListsButton)
+                    } else {
+                        Button("Edit") {
+                            setEditMode(.active)
+                        }
+                        .accessibilityLabel("Edit lists")
+                        .accessibilityIdentifier(ChecklistAccessibility.editListsButton)
                     }
                 }
-                .accessibilityLabel(isEditing ? "Finish editing lists" : "Edit lists")
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -57,7 +69,8 @@ struct ListsSidebarView: View {
                 } label: {
                     Label("New List", systemImage: "plus")
                 }
-                .accessibilityIdentifier("new-list-button")
+                .keyboardShortcut("n", modifiers: .command)
+                .accessibilityIdentifier(ChecklistAccessibility.newListButton)
             }
 
             ToolbarItem(placement: .secondaryAction) {
@@ -71,12 +84,14 @@ struct ListsSidebarView: View {
                         Button("Undo", systemImage: "arrow.uturn.backward") {
                             handle(actions.undo())
                         }
+                        .keyboardShortcut("z", modifiers: .command)
                     }
 
                     if actions.canRedo() {
                         Button("Redo", systemImage: "arrow.uturn.forward") {
                             handle(actions.redo())
                         }
+                        .keyboardShortcut("z", modifiers: [.command, .shift])
                     }
                 } label: {
                     Label("More", systemImage: "ellipsis.circle")
@@ -92,7 +107,6 @@ struct ListsSidebarView: View {
                         selection = newID
                         return .success(())
                     case .failure(let error):
-                        mutationError = MutationErrorPresentation(error: error)
                         return .failure(error)
                     }
                 }
@@ -104,11 +118,7 @@ struct ListsSidebarView: View {
                         .filter { $0.id != checklist.id }
                         .map(\.name)
                 ) { name in
-                    let result = actions.renameChecklist(checklist.id, name)
-                    if case .failure(let error) = result {
-                        mutationError = MutationErrorPresentation(error: error)
-                    }
-                    return result
+                    actions.renameChecklist(checklist.id, name)
                 }
             }
         }
@@ -128,11 +138,11 @@ struct ListsSidebarView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: { request in
-            Text("\"\(request.name)\" and all of its items will be deleted.")
+            Text(ChecklistStrings.deleteListMessage(for: request.name))
         }
         .alert(item: $mutationError) { presentation in
             Alert(
-                title: Text("Couldn't save"),
+                title: Text("Couldn't Complete Action"),
                 message: Text(presentation.message),
                 dismissButton: .default(Text("OK"))
             )
@@ -143,6 +153,14 @@ struct ListsSidebarView: View {
         var ids = checklists.map(\.id)
         ids.move(fromOffsets: offsets, toOffset: destination)
         handle(actions.reorderChecklists(ids))
+    }
+
+    private func setEditMode(_ mode: EditMode) {
+        if reduceMotion {
+            editMode = mode
+        } else {
+            withAnimation { editMode = mode }
+        }
     }
 
     private func requestDelete(at offsets: IndexSet) {
@@ -156,12 +174,12 @@ struct ListsSidebarView: View {
     }
 
     private func confirmDelete(_ request: DeleteListRequest) {
+        let wasSelected = selection == request.id
         let result = actions.deleteChecklist(request.id)
-        handle(result)
-
-        if case .success = result, selection == request.id {
-            selection = checklists.first(where: { $0.id != request.id })?.id
+        if case .success = result, wasSelected {
+            onChecklistDeleted(request.id)
         }
+        handle(result)
 
         pendingDelete = nil
     }
@@ -192,14 +210,4 @@ private struct ListPromptRequest: Identifiable {
 private struct DeleteListRequest: Identifiable {
     let id: UUID
     let name: String
-}
-
-private struct MutationErrorPresentation: Identifiable {
-    let id = UUID()
-    let message: String
-
-    init(error: Error) {
-        let localized = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-        message = localized.isEmpty ? "The change could not be saved. Please try again." : localized
-    }
 }

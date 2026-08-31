@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ListNamePrompt: View {
-    let title: String
+    let title: LocalizedStringKey
     let initialName: String
     let existingNames: [String]
     let onCommit: (String) -> Result<Void, Error>
@@ -12,7 +12,7 @@ struct ListNamePrompt: View {
     @State private var validationMessage: String?
 
     init(
-        title: String,
+        title: LocalizedStringKey,
         initialName: String = "",
         existingNames: [String] = [],
         onCommit: @escaping (String) -> Result<Void, Error>
@@ -38,7 +38,7 @@ struct ListNamePrompt: View {
                         .textInputAutocapitalization(.sentences)
                         .onSubmit(commit)
                         .accessibilityLabel("List name")
-                        .accessibilityIdentifier("list-name-field")
+                        .accessibilityIdentifier(ChecklistAccessibility.listNameField)
                 } footer: {
                     VStack(alignment: .leading, spacing: 4) {
                         if let validationMessage {
@@ -47,7 +47,7 @@ struct ListNamePrompt: View {
                                 .accessibilityAddTraits(.isStaticText)
                         }
 
-                        Text("\(draft.count)/80")
+                        Text("\(draft.count)/\(ChecklistInputValidator.maximumListNameLength)")
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .trailing)
                             .monospacedDigit()
@@ -59,12 +59,12 @@ struct ListNamePrompt: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", role: .cancel) { dismiss() }
-                        .accessibilityIdentifier("cancel-list-button")
+                        .accessibilityIdentifier(ChecklistAccessibility.cancelListButton)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: commit)
                         .disabled(trimmedName.isEmpty)
-                        .accessibilityIdentifier("save-list-button")
+                        .accessibilityIdentifier(ChecklistAccessibility.saveListButton)
                 }
             }
             .onAppear {

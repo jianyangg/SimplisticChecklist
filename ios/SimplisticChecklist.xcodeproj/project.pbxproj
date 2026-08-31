@@ -50,10 +50,21 @@
 		};
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A31000000000000000000001 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Resources/Info.plist",
+			);
+			target = A10000000000000000000001 /* SimplisticChecklist */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A30000000000000000000001 /* SimplisticChecklist */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				A31000000000000000000001 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
 			);
 			path = SimplisticChecklist;
 			sourceTree = "<group>";
